@@ -1,2 +1,3 @@
 # notes-service
-Rust based service for hosting team note taking app.
+ 
+A REST backend for team note-taking.
