@@ -1,15 +1,21 @@
-use notes_service::{build_router, AppState};
+use anyhow::Context;
+use notes_service::{build_router, config::Config, AppState};
 
 #[tokio::main]
-async fn main() {
-    let state = AppState::default();
-    let app = build_router(state);
+async fn main() -> anyhow::Result<()> {
+    // Absent .env is normal — in production the environment is already set.
+    dotenvy::dotenv().ok();
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080")
+    let config = Config::from_env()?;
+    let app = build_router(AppState::default());
+
+    let listener = tokio::net::TcpListener::bind(config.bind_addr)
         .await
-        .expect("bind 127.0.0.1:8080");
+        .with_context(|| format!("could not bind {}", config.bind_addr))?;
 
-    println!("listening on {}", listener.local_addr().unwrap());
+    println!("listening on {}", listener.local_addr()?);
 
-    axum::serve(listener, app).await.expect("server error");
+    axum::serve(listener, app).await.context("server error")?;
+
+    Ok(())
 }
