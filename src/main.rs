@@ -1,5 +1,5 @@
 use anyhow::Context;
-use notes_service::{AppState, build_router, config::Config, telemetry};
+use notes_service::{AppState, build_router, config::Config};
 use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]

@@ -11,6 +11,7 @@ use crate::{domain, AppState};
 pub fn build_router(state: AppState) -> Router {
     Router::new()
         .merge(domain::health::router())
+        .nest("/notes", domain::notes::router())
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }
