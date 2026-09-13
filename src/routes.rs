@@ -4,11 +4,13 @@
 //! they are mounted relative to each other.
 
 use axum::Router;
+use tower_http::trace::TraceLayer;
 
 use crate::{domain, AppState};
 
 pub fn build_router(state: AppState) -> Router {
     Router::new()
         .merge(domain::health::router())
+        .layer(TraceLayer::new_for_http())
         .with_state(state)
 }

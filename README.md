@@ -13,3 +13,9 @@ docker compose ps
 ```bash
 psql postgres://notes:notes@localhost:5432/notes -c 'select 1'
 ```
+
+
+## Overide Logging
+```bash
+RUST_LOG=warn cargo run    # request logs go quiet
+```
