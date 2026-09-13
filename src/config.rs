@@ -1,9 +1,10 @@
-use std::{net::SocketAddr};
 use anyhow::Context;
+use std::net::SocketAddr;
 
 #[derive(Debug, Clone)]
 pub struct Config {
     pub bind_addr: SocketAddr,
+    pub database_url: String,
 }
 
 impl Config {
@@ -18,7 +19,10 @@ impl Config {
             .parse()
             .context("BIND_ADDR must look like 127.0.0.1:8080")?;
 
-
-        Ok(Self { bind_addr })
+        let database_url =
+            std::env::var("DATABASE_URL")
+            .context("DATABASE_URL must be set (see .env.example)")?;
+        
+        Ok(Self { bind_addr, database_url })
     }
 }

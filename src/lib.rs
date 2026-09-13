@@ -8,5 +8,7 @@ pub use routes::build_router;
 
 /// Shared application state.
 ///
-#[derive(Clone, Default)]
-pub struct AppState {}
+#[derive(Clone)]
+pub struct AppState {
+    pub db: sqlx::PgPool,
+}
