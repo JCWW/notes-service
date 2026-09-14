@@ -1,0 +1,74 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT m.user_id AS \"user_id!\",\n               u.display_name AS \"display_name!\",\n               m.role AS \"role!: TeamRole\",\n               m.joined_at AS \"joined_at!\"\n        FROM team_members m\n        JOIN users u ON u.id = m.user_id\n        WHERE m.team_id = $1\n        ORDER BY u.display_name\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!",
+        "type_info": "Uuid",
+        "origin": {
+          "Table": {
+            "table": "team_members",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "display_name!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "display_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "role!: TeamRole",
+        "type_info": {
+          "Custom": {
+            "name": "team_role",
+            "kind": {
+              "Enum": [
+                "member",
+                "admin"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "team_members",
+            "name": "role"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "joined_at!",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "team_members",
+            "name": "joined_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "8d1184e324d253d2d68b7b76c8ce1bdb30eb5beb23adc04a0a81c3d125462e44"
+}

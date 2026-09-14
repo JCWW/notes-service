@@ -1,3 +1,9 @@
+mod common;
+
+use common::spawn_app;
+use serde_json::json;
+use uuid::Uuid;
+
 #[tokio::test]
 async fn create_returns_201_and_the_note() {
     let app = spawn_app().await;
@@ -50,7 +56,7 @@ async fn unknown_user_id_is_401() {
     let app = spawn_app().await;
 
     let res = app
-        .as_user(uuid::Uuid::new_v4())
+        .as_user(Uuid::new_v4())
         .get("/notes")
         .send()
         .await
@@ -117,4 +123,88 @@ async fn deleted_notes_disappear_from_reads() {
         .await
         .unwrap();
     assert_eq!(list.as_array().unwrap().len(), 0);
+}
+
+#[tokio::test]
+async fn creator_becomes_an_admin() {
+    let app = spawn_app().await;
+    let alice = app.seed_user("alice").await;
+
+    let res = app
+        .as_user(alice)
+        .post("/teams")
+        .json(&json!({ "name": "Optics Crew" }))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(res.status(), 201);
+
+    let team: serde_json::Value = res.json().await.unwrap();
+    assert_eq!(team["slug"], "optics-crew");
+
+    let members: serde_json::Value = app
+        .as_user(alice)
+        .get(&format!("/teams/{}/members", team["id"].as_str().unwrap()))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+
+    assert_eq!(members[0]["role"], "admin");
+}
+
+#[tokio::test]
+async fn non_members_cannot_see_a_team() {
+    let app = spawn_app().await;
+    let alice = app.seed_user("alice").await;
+    let bob = app.seed_user("bob").await;
+    let team = app.seed_team_via_api(alice, "Optics Crew").await;
+
+    let res = app
+        .as_user(bob)
+        .get(&format!("/teams/{team}/members"))
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(res.status(), 404);
+}
+
+#[tokio::test]
+async fn plain_members_cannot_add_members() {
+    let app = spawn_app().await;
+    let alice = app.seed_user("alice").await;
+    let bob = app.seed_user("bob").await;
+    let carol = app.seed_user("carol").await;
+    let team = app.seed_team_via_api(alice, "Optics Crew").await;
+    app.add_member(alice, team, bob).await;
+
+    let res = app
+        .as_user(bob)
+        .post(&format!("/teams/{team}/members"))
+        .json(&json!({ "user_id": carol }))
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(res.status(), 403, "member knows the team exists, so 403 not 404");
+}
+
+#[tokio::test]
+async fn duplicate_slug_is_409() {
+    let app = spawn_app().await;
+    let alice = app.seed_user("alice").await;
+    app.seed_team_via_api(alice, "Optics Crew").await;
+
+    let res = app
+        .as_user(alice)
+        .post("/teams")
+        .json(&json!({ "name": "optics crew" }))
+        .send()
+        .await
+        .unwrap();
+
+    assert_eq!(res.status(), 409);
 }

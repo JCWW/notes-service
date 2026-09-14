@@ -1,0 +1,39 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT role AS \"role: TeamRole\" FROM team_members WHERE team_id = $1 AND user_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "role: TeamRole",
+        "type_info": {
+          "Custom": {
+            "name": "team_role",
+            "kind": {
+              "Enum": [
+                "member",
+                "admin"
+              ]
+            }
+          }
+        },
+        "origin": {
+          "Table": {
+            "table": "team_members",
+            "name": "role"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "859609abad91b2233c2b0686a3dc4688bb117cd69d538bf7015ceacd9c42bfdb"
+}

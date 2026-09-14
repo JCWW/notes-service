@@ -1,6 +1,9 @@
-use axum::{http::StatusCode, response::{IntoResponse, Response}, Json};
+use axum::{
+    Json,
+    http::StatusCode,
+    response::{IntoResponse, Response},
+};
 use serde_json::json;
- 
 
 #[derive(Debug, thiserror::Error)]
 pub enum AppError {
@@ -9,9 +12,11 @@ pub enum AppError {
 
     #[error("unauthorized")]
     Unauthorized,
+    #[error("forbidden")]
+    Forbidden,
 
-    #[error("conflict")]
-    Conflict,
+    #[error("{0}")]
+    Conflict(String),
 
     #[error("{0}")]
     Validation(String),
@@ -33,10 +38,11 @@ impl IntoResponse for AppError {
                 "unauthorized",
                 "missing or invalid credentials".to_owned(),
             ),
-            AppError::Conflict => (
-                StatusCode::CONFLICT,
-                "conflict",
-                "the resource changed since you last read it".to_owned(),
+            AppError::Conflict(msg) => (StatusCode::CONFLICT, "conflict", msg.clone()),
+            AppError::Forbidden => (
+                StatusCode::FORBIDDEN,
+                "forbidden",
+                "you do not have permission to do that".to_owned(),
             ),
             AppError::Validation(msg) => (
                 StatusCode::UNPROCESSABLE_ENTITY,
@@ -54,6 +60,14 @@ impl IntoResponse for AppError {
             }
         };
 
-        (status, Json(json!({ "error": { "code": code, "message": message } }))).into_response()
+        (
+            status,
+            Json(json!({ "error": { "code": code, "message": message } })),
+        )
+            .into_response()
     }
+}
+
+pub fn is_unique_violation(err: &sqlx::Error) -> bool {
+    matches!(err, sqlx::Error::Database(db) if db.code().as_deref() == Some("23505"))
 }
